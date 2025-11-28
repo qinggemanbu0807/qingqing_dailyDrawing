@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情情老公的专属特权卡池</title>
+    <title>情情的专属特权卡池</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Inter 字体 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght400;600;800;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -80,9 +80,9 @@
     <div class="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-8">
         <!-- 标题 -->
         <h1 class="text-4xl font-black text-gray-800 mb-6 tracking-tight text-shadow">
-            ✨ 情情老公的专属卡池 ✨
+            情情的专属特权卡池
         </h1>
-        <p class="text-gray-500 mb-8 text-base">每天一次，王锐的特权由你决定！</p>
+        <p class="text-gray-500 mb-8 text-base">每天一次，锐锐的特权由情情决定！</p>
 
         <!-- 抽卡结果区域 -->
         <div id="card-result" class="card-container w-full">
@@ -107,6 +107,11 @@
             抽取今日特权卡！
         </button>
 
+        <!-- 额外奖励按钮 -->
+        <button id="bonus-button" onclick="activateBonus()" class="w-full mt-4 py-3 px-6 bg-yellow-500 hover:bg-yellow-600 text-gray-800 font-bold rounded-xl shadow-lg transform transition duration-150 active:scale-95 text-base hidden">
+            🎁 锐锐的奖励：领取【五连抽】体验礼包！
+        </button>
+
         <!-- 提示信息 -->
         <p id="message" class="mt-4 text-sm text-red-600 font-semibold hidden p-3 bg-red-100 rounded-lg w-full max-w-xs mx-auto shadow">今日特权已使用，明天再来哦！</p>
     </div>
@@ -129,7 +134,6 @@
                 { title: "【睡前陪伴卡】", desc: "今晚锐锐必须陪情情到情情入睡（或能陪到情情安心为止）。", color: "rarity-A" },
                 { title: "【今日愿望许可卡】", desc: "情情可以提一个小愿望，锐锐需要在今天完成。", color: "rarity-A" },
                 { title: "【随机甜蜜任务卡】", desc: "情情今天可以让锐锐为情情做一件‘超小但超暖心’的事，由情情指定。", color: "rarity-A" },
-                { title: "【Loopy宝宝独占】", desc: "获得Loopy宝宝（锐锐）半小时的专属在线表演时间（带头套！）。", color: "rarity-A" },
                 { title: "【早睡强制令】", desc: "锐锐今日必须在情情指定的时间睡觉，不许熬夜学习！", color: "rarity-A" }
             ],
             'B': [
@@ -154,43 +158,59 @@
         };
 
         const drawButton = document.getElementById('draw-button');
+        const bonusButton = document.getElementById('bonus-button');
         const cardInner = document.getElementById('card-inner');
         const messageDisplay = document.getElementById('message');
 
         const lastDrawKey = 'lastDrawDate';
+        const extraDrawsKey = 'extraDraws';
+        const bonusActivatedKey = 'bonusActivated'; // 用于标记奖励是否领取过 (永久)
 
         // --- CST 时间和逻辑函数 ---
 
-        // 获取当前北京时间 (CST, UTC+8)
         function getCSTTime() {
             const now = new Date();
-            // 1. 获取当前UTC时间 (ms)
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000); 
-            // 2. UTC时间 + 8小时 = CST时间 (8 * 60 * 60 * 1000 ms)
             const cstTime = new Date(utcTime + (8 * 3600000));
             return cstTime;
         }
 
-        // 依据 CST 5:00 AM 刷新点，获取当天的日期字符串 (用于 localStorage)
+        // 刷新点为 CST 5:00 AM
         function getCSTResetDateString(cstTime) {
             const cstHour = cstTime.getHours();
             
             // 如果时间在 00:00 到 04:59 CST 之间，'抽卡日'是前一天 (因为5点才刷新)
-            if (cstHour < 5) { // 刷新时间改为 5点
-                // 减去 24 小时 (ms)
+            if (cstHour < 5) { 
                 const previousDay = new Date(cstTime.getTime() - 24 * 3600000);
                 return previousDay.toISOString().slice(0, 10);
             }
-            // 否则，'抽卡日'是今天
             return cstTime.toISOString().slice(0, 10);
         }
 
         // 检查是否在抽卡时间窗内 (CST 5:00 AM - 10:00 AM)
         function checkAccessWindow(cstTime) {
             const cstHour = cstTime.getHours();
-            // 5点（含）到 10点（不含）
             return cstHour >= 5 && cstHour < 10;
         }
+
+        // 获取剩余额外次数
+        function getExtraDraws() {
+            return parseInt(localStorage.getItem(extraDrawsKey) || 0);
+        }
+
+        // --- 奖励激活函数 ---
+        window.activateBonus = function() {
+            if (localStorage.getItem(bonusActivatedKey)) return;
+
+            // 授予 5 次额外抽卡机会
+            localStorage.setItem(extraDrawsKey, 5);
+            // 标记奖励已领取 (永久)
+            localStorage.setItem(bonusActivatedKey, 'true');
+            
+            // 立即刷新状态和按钮文本
+            checkDrawStatus();
+        }
+
 
         // --- 核心逻辑函数 ---
 
@@ -199,11 +219,22 @@
             const todayResetString = getCSTResetDateString(cstTime);
             const lastDrawDate = localStorage.getItem(lastDrawKey);
             const inWindow = checkAccessWindow(cstTime);
+            let extraDraws = getExtraDraws();
 
-            const alreadyDrawnMessage = '今日特权已抽取，明天北京时间凌晨5点刷新后才能再来哦！'; // 更新提示
-            outOfWindowMessage = '今天宝宝没有按时早起哦！请在北京时间早上5点至10点之间再来抽取你的特权！';
+            const alreadyDrawnMessage = `今日特权已抽取，明天北京时间凌晨5点刷新后才能再来哦！`;
+            const outOfWindowMessage = '今天宝宝没有按时早起哦！请在北京时间早上5点至10点之间再来抽取你的特权！';
+            
+            // 1. 检查额外奖励按钮状态
+            if (!localStorage.getItem(bonusActivatedKey)) {
+                bonusButton.classList.remove('hidden');
+                bonusButton.textContent = '🎁 领取【今日五连抽】奖励！';
+            } else {
+                bonusButton.classList.add('hidden');
+            }
 
-            if (!inWindow) {
+
+            // 2. 检查时间窗
+            if (!inWindow && extraDraws === 0) {
                 drawButton.disabled = true;
                 drawButton.classList.add('opacity-50', 'cursor-not-allowed');
                 drawButton.textContent = '请在 5:00 - 10:00 抽取';
@@ -212,6 +243,17 @@
                 return true;
             }
 
+            // 3. 检查额外次数
+            if (extraDraws > 0) {
+                drawButton.disabled = false;
+                drawButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                drawButton.textContent = `抽取特权卡！ (额外次数 x${extraDraws})`;
+                messageDisplay.classList.add('hidden');
+                return false;
+            }
+
+
+            // 4. 检查每日抽卡次数 (只有额外次数为0时才检查)
             if (lastDrawDate === todayResetString) {
                 drawButton.disabled = true;
                 drawButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -221,15 +263,15 @@
                 return true;
             }
 
-            // 如果在时间窗内且未抽卡
+            // 5. 正常抽卡状态
             drawButton.disabled = false;
             drawButton.textContent = '抽取今日特权卡！';
             messageDisplay.classList.add('hidden');
             return false;
         }
 
-        function drawCard() {
-            if (checkDrawStatus()) return;
+        window.drawCard = function() {
+            if (checkDrawStatus() && getExtraDraws() === 0) return; // 再次检查，防止误触
 
             // 1. 确定抽到的稀有度
             let rand = Math.random() * 100;
@@ -248,50 +290,51 @@
             const randomIndex = Math.floor(Math.random() * cardsOfRarity.length);
             const drawnCard = cardsOfRarity[randomIndex];
 
-            // 3. 延迟并翻转卡片
+            // 3. 扣减次数
+            let extraDraws = getExtraDraws();
+            if (extraDraws > 0) {
+                localStorage.setItem(extraDrawsKey, extraDraws - 1); // 优先扣减额外次数
+            } else {
+                const cstTime = getCSTTime();
+                const todayResetString = getCSTResetDateString(cstTime);
+                localStorage.setItem(lastDrawKey, todayResetString); // 否则扣减每日次数
+            }
+
+
+            // 4. 动画效果
             drawButton.disabled = true;
             drawButton.textContent = '抽取中...';
             
-            // 确保卡片初始状态是背面朝上 (CSS 已经设定好)
+            document.getElementById('card-result').classList.remove('flipped');
+            cardInner.classList.remove('flipped'); 
 
             setTimeout(() => {
-                // 4. 更新卡片内容和样式
+                // 5. 更新卡片内容和样式
                 const cardFace = document.getElementById('card-face');
                 const titleDisplay = document.getElementById('title-display');
                 const descriptionDisplay = document.getElementById('description-display');
                 const rarityDisplay = document.getElementById('rarity-display');
 
-                // 清除旧样式，添加新样式
-                // 使用 card-face class 来定位，确保样式是正确的
                 cardFace.className = 'card-face w-full h-full rounded-2xl p-6 shadow-2xl flex flex-col justify-between items-center text-center';
                 cardFace.classList.add(drawnCard.color);
                 
-                // 更新内容
                 rarityDisplay.textContent = '⭐️ ' + rarity + ' 级特权 ⭐️';
                 titleDisplay.textContent = drawnCard.title;
                 descriptionDisplay.textContent = drawnCard.desc;
 
-                // 5. 翻转卡片 (核心操作：添加 flipped 类)
+                // 6. 翻转卡片
                 document.getElementById('card-result').classList.add('flipped');
-                cardInner.classList.add('flipped'); // 添加到 card-inner 元素
+                cardInner.classList.add('flipped');
 
-                // 6. 锁定抽卡状态
-                const cstTime = getCSTTime();
-                const todayResetString = getCSTResetDateString(cstTime);
-                localStorage.setItem(lastDrawKey, todayResetString);
-                
-                // 更新按钮状态
-                checkDrawStatus(); 
+                // 7. 恢复按钮状态
+                setTimeout(checkDrawStatus, 1000); 
 
-            }, 500); // 延迟0.5秒后开始翻转
+            }, 500); 
 
         }
 
         // 页面加载时检查状态
         document.addEventListener('DOMContentLoaded', checkDrawStatus);
-        
-        // 为了方便调试，每隔一分钟检查一次状态（在真实使用中可以省略）
-        // setInterval(checkDrawStatus, 60000); 
     </script>
 </body>
 </html>
