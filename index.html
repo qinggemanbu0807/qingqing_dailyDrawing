@@ -11,15 +11,15 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(180deg, #f7f3f3 0%, #f0e6ff 100%); /* 柔和渐变背景 */
+            background: linear-gradient(180deg, #f7f3f3 0%, #f0e6ff 100%);
             min-height: 100vh;
         }
         /* 确保容器具有 3D 效果 */
         .card-container {
             transform-style: preserve-3d;
-            perspective: 1000px; /* 添加透视效果 */
-            height: 50vh; /* 使用视口高度，更好地适配手机屏幕 */
-            max-height: 400px; /* 限制最大高度 */
+            perspective: 1000px;
+            height: 50vh;
+            max-height: 400px;
         }
         /* 卡片内部，控制整体翻转 */
         .card-inner {
@@ -33,7 +33,7 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            transform: rotateY(180deg); /* 默认背面朝上 */
+            transform: rotateY(180deg);
         }
         /* 默认状态下，背面（点击抽卡）是正面朝上 */
         .card-back {
@@ -41,9 +41,8 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            transform: rotateY(0deg); /* 默认正面朝上 */
+            transform: rotateY(0deg);
         }
-
         /* 翻转状态：整个内部容器旋转 180 度 */
         .flipped .card-inner {
             transform: rotateY(180deg);
@@ -53,8 +52,8 @@
         .rarity-S { 
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
             color: #8B4513; 
-            border: 5px solid #FFD700; /* 边框加粗 */
-            box-shadow: 0 4px 30px rgba(255, 215, 0, 0.8); /* 阴影更明显 */
+            border: 5px solid #FFD700;
+            box-shadow: 0 4px 30px rgba(255, 215, 0, 0.8);
         }
         .rarity-A { 
             background: linear-gradient(135deg, #A8A8A8 0%, #696969 100%); 
@@ -68,68 +67,109 @@
             border: 5px solid #B0E0E6; 
             box-shadow: 0 4px 10px rgba(135, 206, 235, 0.4);
         }
+        /* 重复卡特效 */
+        .rarity-R {
+            background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%); 
+            color: #FFFFFF;
+            border: 5px solid #FFC0CB;
+            box-shadow: 0 4px 30px rgba(255, 20, 147, 0.8);
+        }
         
         /* 标题文字阴影 */
         .text-shadow {
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
+
+        /* 响应式布局：桌面端并排，移动端堆叠 */
+        @media (min-width: 1024px) {
+            .main-content {
+                display: grid;
+                grid-template-columns: 2fr 1fr; /* 抽卡区宽，图鉴区窄 */
+                gap: 24px;
+                max-width: 1200px;
+            }
+        }
+        .main-content {
+            padding: 1rem;
+        }
+        .collection-sidebar {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            max-height: 80vh; /* 限制高度方便滚动 */
+            overflow-y: auto;
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-8">
-        <!-- 标题 -->
-        <h1 class="text-4xl font-black text-gray-800 mb-6 tracking-tight text-shadow">
-            情情的专属特权卡池
-        </h1>
-        <p class="text-gray-500 mb-8 text-base">每天一次，锐锐的特权由情情决定！</p>
+    <h1 class="text-4xl font-black text-gray-800 mb-6 tracking-tight text-shadow mt-4">
+        情情的专属特权卡池
+    </h1>
+    <p class="text-gray-500 mb-8 text-base">每天一次，锐锐的特权由情情决定！</p>
+    
+    <!-- 主内容区：左边是抽卡，右边是图鉴 (lg:grid for desktop) -->
+    <div class="main-content w-full">
+        
+        <!-- 左侧：抽卡区 -->
+        <div class="flex flex-col items-center text-center w-full max-w-md mx-auto lg:mx-0">
 
-        <!-- 迟到补救区域 -->
-        <div id="late-save-container" class="w-full mb-6 hidden">
-            <div id="late-timer" class="text-lg font-bold text-red-600 bg-red-100 p-3 rounded-lg shadow-md mb-3 border-2 border-red-300">
-                <!-- 计时器实时更新 -->
+            <!-- 迟到补救区域 -->
+            <div id="late-save-container" class="w-full mb-6 hidden">
+                <div id="late-timer" class="text-lg font-bold text-red-600 bg-red-100 p-3 rounded-lg shadow-md mb-3 border-2 border-red-300">
+                    <!-- 计时器实时更新 -->
+                </div>
+                <button id="late-button" onclick="activateLateSave()" class="w-full py-3 px-6 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg transform transition duration-150 active:scale-95 text-base">
+                    ⏱️ 迟到补救：点击获取今天的抽卡机会！
+                </button>
             </div>
-            <button id="late-button" onclick="activateLateSave()" class="w-full py-3 px-6 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg transform transition duration-150 active:scale-95 text-base">
-                ⏱️ 迟到补救：点击获取今天的抽卡机会！
+
+
+            <!-- 抽卡结果区域 -->
+            <div id="card-result" class="card-container w-full">
+                <div id="card-inner" class="card-inner h-full w-full">
+                    
+                    <!-- 卡片背面 (初始状态) -->
+                    <div id="card-back" class="card-back w-full h-full rounded-2xl bg-gradient-to-br from-pink-500 to-red-600 flex items-center justify-center border-4 border-pink-200 shadow-xl p-6">
+                        <span class="text-white text-3xl font-extrabold tracking-widest text-shadow">点击抽卡</span>
+                    </div>
+
+                    <!-- 卡片正面 (结果显示) -->
+                    <div id="card-face" class="card-face w-full h-full rounded-2xl p-6 shadow-2xl flex flex-col justify-between items-center text-center">
+                        <div class="text-4xl font-black mb-2 text-shadow" id="rarity-display"></div>
+                        <p class="text-base font-medium mb-4 text-gray-700" id="description-display"></p>
+                        <div class="text-xl font-extrabold p-3 rounded-full w-full shadow-md" id="title-display"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按钮区域 -->
+            <button id="draw-button" onclick="drawCard()" class="w-full mt-10 py-5 px-6 bg-pink-500 hover:bg-pink-600 text-white font-black rounded-2xl shadow-xl transform transition duration-150 active:scale-95 text-xl tracking-wider">
+                抽取今日特权卡！
             </button>
+            
+            <!-- 提示信息 -->
+            <p id="message" class="mt-4 text-sm text-red-600 font-semibold hidden p-3 bg-red-100 rounded-lg w-full max-w-xs mx-auto shadow">今日特权已使用，明天再来哦！</p>
         </div>
 
-
-        <!-- 抽卡结果区域 -->
-        <div id="card-result" class="card-container w-full">
-            <div id="card-inner" class="card-inner h-full w-full">
-                
-                <!-- 卡片背面 (初始状态) -->
-                <div id="card-back" class="card-back w-full h-full rounded-2xl bg-gradient-to-br from-pink-500 to-red-600 flex items-center justify-center border-4 border-pink-200 shadow-xl p-6">
-                    <span class="text-white text-3xl font-extrabold tracking-widest text-shadow">点击抽卡</span>
-                </div>
-
-                <!-- 卡片正面 (结果显示) -->
-                <div id="card-face" class="card-face w-full h-full rounded-2xl p-6 shadow-2xl flex flex-col justify-between items-center text-center">
-                    <div class="text-4xl font-black mb-2 text-shadow" id="rarity-display"></div>
-                    <p class="text-base font-medium mb-4 text-gray-700" id="description-display"></p>
-                    <div class="text-xl font-extrabold p-3 rounded-full w-full shadow-md" id="title-display"></div>
-                </div>
+        <!-- 右侧：情情特权图鉴 -->
+        <div class="w-full mt-8 lg:mt-0 collection-sidebar">
+            <h2 class="text-2xl font-black text-gray-700 mb-4 border-b pb-2">
+                情情特权图鉴 
+                <span id="card-count" class="text-base font-normal text-pink-500 ml-2"></span>
+            </h2>
+            <div id="collection-list" class="space-y-3">
+                <p class="text-gray-500" id="collection-placeholder">抽取第一张卡后，图鉴会自动显示在这里哦！</p>
+                <!-- 卡片列表将由 JS 动态生成 -->
             </div>
         </div>
 
-        <!-- 按钮区域 -->
-        <button id="draw-button" onclick="drawCard()" class="w-full mt-10 py-5 px-6 bg-pink-500 hover:bg-pink-600 text-white font-black rounded-2xl shadow-xl transform transition duration-150 active:scale-95 text-xl tracking-wider">
-            抽取今日特权卡！
-        </button>
-
-        <!-- 额外奖励按钮 -->
-        <button id="bonus-button" onclick="activateBonus()" class="w-full mt-4 py-3 px-6 bg-yellow-500 hover:bg-yellow-600 text-gray-800 font-bold rounded-xl shadow-lg transform transition duration-150 active:scale-95 text-base hidden">
-            🎁 锐锐的奖励：领取【五连抽】体验礼包！
-        </button>
-
-        <!-- 提示信息 -->
-        <p id="message" class="mt-4 text-sm text-red-600 font-semibold hidden p-3 bg-red-100 rounded-lg w-full max-w-xs mx-auto shadow">今日特权已使用，明天再来哦！</p>
     </div>
 
     <script>
         // 卡片数据：稀有度、标题、描述
-        const cardData = {
+        const ALL_CARDS = {
             'S': [
                 { title: "【绝对指令权】", desc: "今日锐锐需无条件接受情情的一条指令（限合理范围）！", color: "rarity-S" },
                 { title: "【思念的深度提问】", desc: "情情今晚可向锐锐提出两个最私密、最渴望知道的、关于身体的深度问题，锐锐必须如实回答并进行最细节的描述。", color: "rarity-S" },
@@ -163,29 +203,31 @@
 
         // 概率配置
         const rarityChances = {
-            'S': 10, // S级 10%
-            'A': 30, // A级 30%
-            'B': 60  // B级 60%
+            'S': 10, 
+            'A': 30, 
+            'B': 60  
         };
 
+        // DOM 元素引用
         const drawButton = document.getElementById('draw-button');
-        const bonusButton = document.getElementById('bonus-button');
         const lateSaveContainer = document.getElementById('late-save-container');
         const lateTimer = document.getElementById('late-timer');
         const cardInner = document.getElementById('card-inner');
         const messageDisplay = document.getElementById('message');
+        const collectionList = document.getElementById('collection-list');
+        const cardCount = document.getElementById('card-count');
 
+        // LocalStorage Key
         const lastDrawKey = 'lastDrawDate';
-        const extraDrawsKey = 'extraDraws';
-        const bonusActivatedKey = 'bonusActivated'; 
-        const lateSaveActivatedKey = 'lateSaveActivated'; // 迟到补救是否已使用
+        const lateSaveActivatedKey = 'lateSaveActivated'; 
+        const collectedCardsKey = 'collectedCards'; // 新增：用于存储图鉴数据
 
         // --- CST 时间和逻辑函数 ---
 
         function getCSTTime() {
             const now = new Date();
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000); 
-            const cstTime = new Date(utcTime + (8 * 3600000));
+            const cstTime = new Date(utcTime + (8 * 3600000)); // 北京时间 (CST/GMT+8)
             return cstTime;
         }
 
@@ -215,24 +257,6 @@
             return cstHour === 10 && cstMinute < 30;
         }
 
-        // 获取剩余额外次数
-        function getExtraDraws() {
-            return parseInt(localStorage.getItem(extraDrawsKey) || 0);
-        }
-
-        // --- 奖励激活函数 ---
-        window.activateBonus = function() {
-            if (localStorage.getItem(bonusActivatedKey)) return;
-
-            // 授予 5 次额外抽卡机会
-            localStorage.setItem(extraDrawsKey, 5);
-            // 标记奖励已领取 (永久)
-            localStorage.setItem(bonusActivatedKey, 'true');
-            
-            // 立即刷新状态和按钮文本
-            checkDrawStatus();
-        }
-
         // --- 迟到补救激活函数 ---
         window.activateLateSave = function() {
             const cstTime = getCSTTime();
@@ -242,7 +266,7 @@
                  return; // 今天已使用
             }
 
-            // 恢复今日抽卡次数
+            // 恢复今日抽卡次数 (移除 lastDrawDate，相当于没抽过)
             localStorage.removeItem(lastDrawKey);
             // 标记今天已使用补救
             localStorage.setItem(lateSaveActivatedKey, todayResetString);
@@ -251,13 +275,90 @@
             checkDrawStatus();
         }
 
+        // --- 图鉴管理函数 ---
 
-        // --- 核心逻辑函数 ---
+        function getCollectedCards() {
+            try {
+                const json = localStorage.getItem(collectedCardsKey);
+                return json ? JSON.parse(json) : [];
+            } catch (e) {
+                console.error("Error loading collected cards:", e);
+                return [];
+            }
+        }
+
+        function saveCollectedCards(cards) {
+            localStorage.setItem(collectedCardsKey, JSON.stringify(cards));
+        }
+
+        // 切换卡片使用状态
+        window.toggleCardUsage = function(title) {
+            let cards = getCollectedCards();
+            const cardIndex = cards.findIndex(c => c.title === title);
+            
+            if (cardIndex !== -1) {
+                cards[cardIndex].used = !cards[cardIndex].used;
+                saveCollectedCards(cards);
+                renderCollection(); // 重新渲染图鉴
+            }
+        }
+
+        function renderCollection() {
+            const cards = getCollectedCards().sort((a, b) => {
+                // 排序逻辑：S > A > B，然后按标题字母顺序
+                const rarityOrder = {'S': 3, 'A': 2, 'B': 1};
+                if (rarityOrder[b.rarity] !== rarityOrder[a.rarity]) {
+                    return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+                }
+                return a.title.localeCompare(b.title);
+            });
+
+            collectionList.innerHTML = '';
+            cardCount.textContent = `(已收集 ${cards.length} 种)`;
+
+            // Get the placeholder element safely
+            const placeholder = document.getElementById('collection-placeholder');
+
+            if (cards.length === 0) {
+                if (placeholder) {
+                   placeholder.classList.remove('hidden');
+                }
+                return;
+            }
+            
+            if (placeholder) {
+                placeholder.classList.add('hidden');
+            }
+
+
+            cards.forEach(card => {
+                const buttonColor = card.used ? 'bg-gray-400 hover:bg-gray-500' : 'bg-green-500 hover:bg-green-600';
+                const statusText = card.used ? '✅ 已使用' : '🌟 未使用';
+                const rarityClass = card.color.replace('rarity-', 'text-');
+                
+                const cardHtml = `
+                    <div class="p-3 border rounded-lg shadow-sm flex justify-between items-center text-sm ${card.used ? 'opacity-60 bg-gray-50' : 'bg-white'}">
+                        <div class="flex flex-col text-left">
+                            <span class="font-bold ${rarityClass}">${card.title}</span>
+                            <span class="text-xs text-gray-500">${card.rarity} 级特权</span>
+                        </div>
+                        <button onclick="toggleCardUsage('${card.title}')" class="py-1 px-3 ${buttonColor} text-white font-semibold rounded-full transition duration-150 text-xs shadow-md">
+                            ${statusText}
+                        </button>
+                    </div>
+                `;
+                collectionList.innerHTML += cardHtml;
+            });
+        }
+
+
+        // --- UI 状态检查函数 ---
 
         function updateLateSaveUI(cstTime) {
             const isLateWindow = checkLateSaveWindow(cstTime);
             const todayResetString = getCSTResetDateString(cstTime);
             const lateSaveUsed = localStorage.getItem(lateSaveActivatedKey) === todayResetString;
+            const lastDrawDate = localStorage.getItem(lastDrawKey);
             
             // 1. 计算剩余时间
             const targetTime = new Date(cstTime);
@@ -265,14 +366,13 @@
             const timeDiff = targetTime.getTime() - cstTime.getTime();
             const minutesLeft = Math.floor(timeDiff / 60000);
 
-            if (isLateWindow && !lateSaveUsed) {
-                // 在时间窗内且未使用补救
+            if (isLateWindow && !lateSaveUsed && lastDrawDate === todayResetString) {
+                // 在时间窗内、未使用补救、且已经抽过卡 (需要补救)
                 lateSaveContainer.classList.remove('hidden');
-                lateTimer.textContent = `最后的机会！还有 ${minutesLeft} 分钟！`;
-                // 确保抽卡按钮在补救状态下可用
-                drawButton.disabled = false;
-                drawButton.classList.remove('opacity-50', 'cursor-not-allowed');
-
+                lateTimer.textContent = `最后的机会！还有 ${minutesLeft} 分钟！点击补救抽卡！`;
+            } else if (isLateWindow && !lateSaveUsed && lastDrawDate !== todayResetString) {
+                 // 在时间窗内、未使用补救、但还没抽卡 (情情是按时起的，只是在 10:00-10:30 之间抽)
+                lateSaveContainer.classList.add('hidden');
             } else {
                 lateSaveContainer.classList.add('hidden');
             }
@@ -284,31 +384,14 @@
             const lastDrawDate = localStorage.getItem(lastDrawKey);
             const inWindow = checkAccessWindow(cstTime);
             const isLateWindow = checkLateSaveWindow(cstTime);
-            let extraDraws = getExtraDraws();
 
-            const alreadyDrawnMessage = `今日特权已抽取！明天要继续坚持早起喔！`;
-            const outOfWindowMessage = '今天宝宝没有按时早起哦！明天一定要做到！';
+            const alreadyDrawnMessage = `今日特权已抽取，明天北京时间凌晨5点刷新后才能再来哦！`;
+            const outOfWindowMessage = '今天宝宝没有按时早起哦！请在北京时间早上5点至10点之间再来抽取你的特权！';
             
             // 1. 实时更新迟到补救UI
             updateLateSaveUI(cstTime);
 
-            // 2. 检查额外奖励按钮状态
-            if (!localStorage.getItem(bonusActivatedKey)) {
-                bonusButton.classList.remove('hidden');
-            } else {
-                bonusButton.classList.add('hidden');
-            }
-
-            // 3. 检查额外次数 (额外次数不受时间窗限制)
-            if (extraDraws > 0) {
-                drawButton.disabled = false;
-                drawButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                drawButton.textContent = `抽取特权卡！ (额外次数 x${extraDraws})`;
-                messageDisplay.classList.add('hidden');
-                return false;
-            }
-
-            // 4. 检查每日抽卡次数
+            // 2. 检查每日抽卡次数
             if (lastDrawDate === todayResetString) {
                 drawButton.disabled = true;
                 drawButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -318,8 +401,7 @@
                 return true;
             }
 
-
-            // 5. 检查时间窗 (只有在无额外次数且未抽卡时才生效)
+            // 3. 检查时间窗 (只有在未抽卡时才检查)
             if (!inWindow && !isLateWindow) {
                 drawButton.disabled = true;
                 drawButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -329,20 +411,18 @@
                 return true;
             }
             
-            // 6. 正常抽卡状态
+            // 4. 正常抽卡状态
             drawButton.disabled = false;
+            drawButton.classList.remove('opacity-50', 'cursor-not-allowed');
             drawButton.textContent = '抽取今日特权卡！';
             messageDisplay.classList.add('hidden');
             return false;
         }
 
+        // --- 核心抽卡逻辑 ---
+
         window.drawCard = function() {
-            // 允许在 5:00-10:00 内 或 有额外次数时抽卡
-            if (checkDrawStatus() && getExtraDraws() === 0) {
-                 const cstTime = getCSTTime();
-                 // 排除 10:00-10:30 补救时间
-                 if (!checkAccessWindow(cstTime) && !checkLateSaveWindow(cstTime)) return;
-            }
+            if (checkDrawStatus()) return; // 检查是否可以抽卡
 
             // 1. 确定抽到的稀有度
             let rand = Math.random() * 100;
@@ -357,22 +437,15 @@
             }
 
             // 2. 从该稀有度中随机抽取一张卡
-            const cardsOfRarity = cardData[rarity];
+            const cardsOfRarity = ALL_CARDS[rarity];
             const randomIndex = Math.floor(Math.random() * cardsOfRarity.length);
             const drawnCard = cardsOfRarity[randomIndex];
 
-            // 3. 扣减次数
-            let extraDraws = getExtraDraws();
-            if (extraDraws > 0) {
-                localStorage.setItem(extraDrawsKey, extraDraws - 1); // 优先扣减额外次数
-            } else {
-                const cstTime = getCSTTime();
-                const todayResetString = getCSTResetDateString(cstTime);
-                localStorage.setItem(lastDrawKey, todayResetString); // 否则扣减每日次数
-            }
+            // 3. 检查是否重复
+            const lastDrawnTitle = localStorage.getItem('lastDrawnTitle'); // 存储上次抽取的卡片标题
+            const isRepeat = (lastDrawnTitle === drawnCard.title);
 
-
-            // 4. 动画效果
+            // 4. 动画和状态更新
             drawButton.disabled = true;
             drawButton.textContent = '抽取中...';
             
@@ -380,32 +453,67 @@
             cardInner.classList.remove('flipped'); 
 
             setTimeout(() => {
-                // 5. 更新卡片内容和样式
                 const cardFace = document.getElementById('card-face');
                 const titleDisplay = document.getElementById('title-display');
                 const descriptionDisplay = document.getElementById('description-display');
                 const rarityDisplay = document.getElementById('rarity-display');
 
+                // 4a. 设置卡片样式和内容
                 cardFace.className = 'card-face w-full h-full rounded-2xl p-6 shadow-2xl flex flex-col justify-between items-center text-center';
-                cardFace.classList.add(drawnCard.color);
-                
-                rarityDisplay.textContent = '⭐️ ' + rarity + ' 级特权 ⭐️';
-                titleDisplay.textContent = drawnCard.title;
-                descriptionDisplay.textContent = drawnCard.desc;
 
-                // 6. 翻转卡片
+                if (isRepeat) {
+                    cardFace.classList.add('rarity-R');
+                    rarityDisplay.textContent = '⚠️ 重复卡：特权已升级！';
+                    titleDisplay.textContent = drawnCard.title;
+                    descriptionDisplay.textContent = `情情，你抽到了同样的卡！特权等级自动+1，锐锐会加倍努力执行！`;
+                } else {
+                    cardFace.classList.add(drawnCard.color);
+                    rarityDisplay.textContent = '⭐️ ' + rarity + ' 级特权 ⭐️';
+                    titleDisplay.textContent = drawnCard.title;
+                    descriptionDisplay.textContent = drawnCard.desc;
+                }
+
+                // 4b. 翻转卡片
                 document.getElementById('card-result').classList.add('flipped');
                 cardInner.classList.add('flipped');
 
-                // 7. 恢复按钮状态
+                // 4c. 更新永久状态
+                // 标记今天已抽卡
+                const cstTime = getCSTTime();
+                const todayResetString = getCSTResetDateString(cstTime);
+                localStorage.setItem(lastDrawKey, todayResetString); 
+                localStorage.setItem('lastDrawnTitle', drawnCard.title);
+
+                // 更新图鉴
+                addCardToCollection(drawnCard, rarity);
+                
+                // 4d. 恢复按钮状态
                 setTimeout(checkDrawStatus, 1000); 
 
             }, 500); 
+        }
 
+        // 仅在卡片不存在于图鉴中时添加
+        function addCardToCollection(card, rarity) {
+            let cards = getCollectedCards();
+            const exists = cards.some(c => c.title === card.title);
+
+            if (!exists) {
+                cards.push({
+                    title: card.title,
+                    desc: card.desc,
+                    color: card.color,
+                    rarity: rarity,
+                    used: false // 默认未被使用
+                });
+                saveCollectedCards(cards);
+            }
+            renderCollection();
         }
 
         // 页面加载时检查状态并启动定时器
         document.addEventListener('DOMContentLoaded', () => {
+            renderCollection(); // 初始化图鉴
             checkDrawStatus();
             // 每分钟更新一次UI，确保计时器和状态及时刷新
             setInterval(checkDrawStatus, 60000); 
