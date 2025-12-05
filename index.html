@@ -221,6 +221,7 @@
         const lastDrawKey = 'lastDrawDate';
         const lateSaveActivatedKey = 'lateSaveActivated'; 
         const collectedCardsKey = 'collectedCards'; // 新增：用于存储图鉴数据
+        const lastDrawnTitleKey = 'lastDrawnTitle'; // 用于存储上次抽取的卡片标题
 
         // --- CST 时间和逻辑函数 ---
 
@@ -442,7 +443,7 @@
             const drawnCard = cardsOfRarity[randomIndex];
 
             // 3. 检查是否重复
-            const lastDrawnTitle = localStorage.getItem('lastDrawnTitle'); // 存储上次抽取的卡片标题
+            const lastDrawnTitle = localStorage.getItem(lastDrawnTitleKey); // 获取上次抽取的卡片标题
             const isRepeat = (lastDrawnTitle === drawnCard.title);
 
             // 4. 动画和状态更新
@@ -482,7 +483,7 @@
                 const cstTime = getCSTTime();
                 const todayResetString = getCSTResetDateString(cstTime);
                 localStorage.setItem(lastDrawKey, todayResetString); 
-                localStorage.setItem('lastDrawnTitle', drawnCard.title);
+                localStorage.setItem(lastDrawnTitleKey, drawnCard.title); // 更新上次抽取的卡片标题
 
                 // 更新图鉴
                 addCardToCollection(drawnCard, rarity);
